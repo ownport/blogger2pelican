@@ -36,4 +36,6 @@ nosetests.xml
 
 # private data
 source/*
+posts/*
+
 
