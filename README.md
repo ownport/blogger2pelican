@@ -38,7 +38,9 @@ The field mapping from blogger xml file to Pelican post in Markdown format
 
 Blogger | Pelican
 ------- | --------
-
+title   | title
+author  | author
+updated | date
 
 
 Note that, aside from the title, none of this metadata is mandatory.
