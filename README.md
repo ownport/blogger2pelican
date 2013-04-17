@@ -1,6 +1,6 @@
 # blogger2pelican
 
-Converter blogger posts to pelican
+Converter [blogger](http://www.blogger.com) posts for import to [pelican](http://blog.getpelican.com/)
 
 ## How to install
 
@@ -34,3 +34,11 @@ Summary: Short version for index and feeds
 This is the content of blogger2pelican blog post.
 ```
 
+The field mapping from blogger xml file to Pelican post in Markdown format
+
+Blogger | Pelican
+------- | --------
+
+
+
+Note that, aside from the title, none of this metadata is mandatory.
