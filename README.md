@@ -41,6 +41,7 @@ Blogger | Pelican
 title   | title
 author  | author
 updated | date
-
+tags    | tags
+content | post content
 
 Note that, aside from the title, none of this metadata is mandatory.
