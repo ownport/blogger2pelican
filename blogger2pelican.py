@@ -11,6 +11,19 @@ from packages.xpathselectors import XmlXPathSelector
 BLOGGER_NAMESPACES = {
     'a': 'http://www.w3.org/2005/Atom',
 }
+def print_post(post):
+    ''' print post
+    '''
+    print 'Title: %s' % post['title']
+    if post['author']['email'] <> u'noreply@blogger.com':
+        print 'Author: %s <%s>' % (post['author']['name'], post['author']['email'])
+    else:
+        print 'Author: %s' % post['author']['name']
+    print 'Date: %s' % post['updated']
+    print 'Tags: %s\n' % ','.join(post['tags'])
+    print post['content']
+    print '--------------------------------------\n'
+
 def parse_entry(entry):
     ''' return parsed entry
     '''
@@ -56,7 +69,7 @@ def parse_xml(xml_file, directory):
     for entry in xxs.select('//a:feed/a:entry'):
         entry_res = parse_entry(entry)
         if entry_res:
-            print entry_res
+            print_post(entry_res)
     
 def usage():
     ''' print how to use blogger2pelican
