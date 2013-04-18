@@ -11,6 +11,8 @@ from packages.xpathselectors import XmlXPathSelector
 BLOGGER_NAMESPACES = {
     'a': 'http://www.w3.org/2005/Atom',
 }
+
+
 def print_post(post):
     ''' print post
     '''
@@ -23,6 +25,11 @@ def print_post(post):
     print 'Tags: %s\n' % ','.join(post['tags'])
     print post['content']
     print '--------------------------------------\n'
+
+def save_post(post):
+    ''' save post to file
+    '''
+    pass
 
 def parse_entry(entry):
     ''' return parsed entry
