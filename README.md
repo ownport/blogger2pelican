@@ -45,3 +45,10 @@ tags    | tags
 content | post content
 
 Note that, aside from the title, none of this metadata is mandatory.
+
+## Links
+
+- [Pelican web site](http://getpelican.com/)
+- [Blogger.com](http://www.blogger.com)
+- [Blogging with Pelican](http://www.futurile.net/resources/blogging/pelican.html)
+
