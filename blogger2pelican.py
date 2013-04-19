@@ -59,6 +59,7 @@ def save_post(directory, post):
     
     post_path = os.path.join(post_directory, os.path.basename(post['link']))
     post_path = post_path.replace('.html', '.md')
+    
     with open(post_path, 'w+') as post_file:
         post_file.write(make_post(post).encode('utf8'))  
 
