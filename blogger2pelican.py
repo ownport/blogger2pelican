@@ -5,31 +5,62 @@
 #   
 import os
 import sys
+import urlparse
 
+from datetime import datetime
+from packages import html2text
+from urlparse import urlparse
 from packages.xpathselectors import XmlXPathSelector
 
 BLOGGER_NAMESPACES = {
     'a': 'http://www.w3.org/2005/Atom',
 }
 
+def simplify_datetime(dt):
+    ''' 
+    - leave just date + time without miliseconds and timezone
+    - replace 'T' by ' '
+    '''
+    dt, dt_tzone = dt.split('.')
+    dt = dt.replace('T',' ')
+    return dt
+
+def make_post(post):
+    ''' make post
+    '''
+    result = unicode()
+    result += u'Title: %s\n' % post['title']
+    if post['author']['email'] <> u'noreply@blogger.com':
+        result += u'Author: %s <%s>\n' % (post['author']['name'], post['author']['email'])
+    else:
+        result += u'Author: %s\n' % post['author']['name']
+    result += u'Date: %s\n' % post['published']
+    result += u'Tags: %s\n\n' % ','.join(post['tags'])
+
+    result += post['content']
+    return result
 
 def print_post(post):
     ''' print post
     '''
-    print 'Title: %s' % post['title']
-    if post['author']['email'] <> u'noreply@blogger.com':
-        print 'Author: %s <%s>' % (post['author']['name'], post['author']['email'])
-    else:
-        print 'Author: %s' % post['author']['name']
-    print 'Date: %s' % post['updated']
-    print 'Tags: %s\n' % ','.join(post['tags'])
-    print post['content']
+    print make_post(post)
     print '--------------------------------------\n'
 
-def save_post(post):
+def save_post(directory, post):
     ''' save post to file
     '''
-    pass
+    post_directory = os.path.dirname(urlparse(post['link']).path)
+    if post_directory[0] == '/':
+        post_directory = post_directory[1:]
+    post_directory = os.path.join(directory, post_directory)
+    
+    if not os.path.exists(post_directory):
+        os.makedirs(post_directory)
+    
+    post_path = os.path.join(post_directory, os.path.basename(post['link']))
+    post_path = post_path.replace('.html', '.md')
+    with open(post_path, 'w+') as post_file:
+        post_file.write(make_post(post).encode('utf8'))  
 
 def parse_entry(entry):
     ''' return parsed entry
@@ -46,10 +77,16 @@ def parse_entry(entry):
 
     result['id'] = u''.join(entry.select('a:id/text()').extract())
     result['published'] = u''.join(entry.select('a:published/text()').extract())
+    result['published'] = simplify_datetime(result['published']) 
     result['updated'] = u''.join(entry.select('a:updated/text()').extract())
+    result['updated'] = simplify_datetime(result['updated'])
     result['title'] = u''.join(entry.select('a:title/text()').extract())
+    
     result['content'] = u''.join(entry.select('a:content/text()').extract())
-    result['links'] = entry.select('a:link/@href').extract()
+    result['content'] = html2text.html2text(result['content'])
+    
+    result['link'] = u''.join(entry.select('a:link[@rel="alternate"]/@href').extract())
+    
     result['author'] = dict()
     result['author']['name'] = u''.join(entry.select('a:author/a:name/text()').extract())
     result['author']['email'] = u''.join(entry.select('a:author/a:email/text()').extract())
@@ -76,7 +113,8 @@ def parse_xml(xml_file, directory):
     for entry in xxs.select('//a:feed/a:entry'):
         entry_res = parse_entry(entry)
         if entry_res:
-            print_post(entry_res)
+            #print_post(entry_res)
+            save_post(directory, entry_res)
     
 def usage():
     ''' print how to use blogger2pelican
