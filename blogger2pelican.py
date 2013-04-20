@@ -35,6 +35,7 @@ def make_post(post):
     else:
         result += u'Author: %s\n' % post['author']['name']
     result += u'Date: %s\n' % post['published']
+    result += u'Slug: %s\n' % os.path.basename(post['link']).replace('.html','')
     result += u'Tags: %s\n\n' % ','.join(post['tags'])
 
     result += post['content']
