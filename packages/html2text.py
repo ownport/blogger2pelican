@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+# -*- codeing: utf-8 -*-
+
+# orignal source: http://pypi.python.org/pypi/html2text/
+# source for scraperdragon-gov.uk branch: https://github.com/scraperdragon/gov.uk
+
 """html2text: Turn HTML into equivalent Markdown-structured text."""
 __version__ = "3.200.3"
 __author__ = "Aaron Swartz (me@aaronsw.com)"
@@ -61,6 +66,7 @@ IGNORE_ANCHORS = False
 IGNORE_IMAGES = False
 IGNORE_EMPHASIS = False
 
+PARSE_WEIRD_LINKS= False
 ### Entity Nonsense ###
 
 def name2cp(k):
@@ -182,6 +188,7 @@ class HTML2Text(HTMLParser.HTMLParser):
     def __init__(self, out=None, baseurl=''):
         HTMLParser.HTMLParser.__init__(self)
 
+        self.parse_weird_links = PARSE_WEIRD_LINKS
         # Config options
         self.unicode_snob = UNICODE_SNOB
         self.escape_snob = ESCAPE_SNOB
@@ -492,6 +499,55 @@ class HTML2Text(HTMLParser.HTMLParser):
                                 a['outcount'] = self.outcount
                                 self.a.append(a)
                             self.o("][" + str(a['count']) + "]")
+
+        if tag in ["embed", "iframe"] and not self.ignore_links and self.parse_weird_links:
+            if start:
+                if has_key(attrs, 'src') and not (self.skip_internal_links and attrs['src'].startswith('#')):
+                    self.astack.append(attrs)
+                    self.o("!["+tag+': ')
+                else:
+                    self.astack.append(None)
+            else:
+                if self.astack:
+                    a = self.astack.pop()
+                    if a:
+                        if self.inline_links:
+                            self.o("](" + a['src'] + ")")
+                        else:
+                            i = self.previousIndex(a)
+                            if i is not None:
+                                a = self.a[i]
+                            else:
+                                self.acount += 1
+                                a['count'] = self.acount
+                                a['outcount'] = self.outcount
+                                self.a.append(a)
+                            self.o("][" + str(a['count']) + "]")
+
+        if tag == "object" and not self.ignore_links and self.parse_weird_links:
+            if start:
+                if has_key(attrs, 'data') and not (self.skip_internal_links and attrs['data'].startswith('#')):
+                    self.astack.append(attrs)
+                    self.o("!["+tag+': ')
+                else:
+                    self.astack.append(None)
+            else:
+                if self.astack:
+                    a = self.astack.pop()
+                    if a:
+                        if self.inline_links:
+                            self.o("](" + a['data'] + ")")
+                        else:
+                            i = self.previousIndex(a)
+                            if i is not None:
+                                a = self.a[i]
+                            else:
+                                self.acount += 1
+                                a['count'] = self.acount
+                                a['outcount'] = self.outcount
+                                self.a.append(a)
+                            self.o("][" + str(a['count']) + "]")
+             
 
         if tag == "img" and start and not self.ignore_images:
             if has_key(attrs, 'src'):

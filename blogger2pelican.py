@@ -84,8 +84,11 @@ def parse_entry(entry):
     result['updated'] = simplify_datetime(result['updated'])
     result['title'] = u''.join(entry.select('a:title/text()').extract())
     
-    result['content'] = u''.join(entry.select('a:content/text()').extract())
-    result['content'] = html2text.html2text(result['content'])
+    content = u''.join(entry.select('a:content/text()').extract())
+    # TODO: added base url
+    h = html2text.HTML2Text()
+    h.parse_weird_links = True
+    result['content'] = h.handle(content)
     
     result['link'] = u''.join(entry.select('a:link[@rel="alternate"]/@href').extract())
     
