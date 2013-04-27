@@ -4,17 +4,117 @@
 # Converter blogger's posts to pelican's posts
 #   
 import os
+import re
 import sys
 import urlparse
 
 from datetime import datetime
-from packages import html2text
 from urlparse import urlparse
 from packages.xpathselectors import XmlXPathSelector
 
 BLOGGER_NAMESPACES = {
     'a': 'http://www.w3.org/2005/Atom',
 }
+
+class Post2MD(object):
+    ''' convert html post to markdown
+    '''
+    def __init__(self, html):
+        ''' __init__
+        '''
+        self._html = html
+    
+    def _handle_a_tag(self, html):
+        ''' handle `a` tag
+        '''
+        # remove <a name='more'></a>
+        result = re.sub(r"<a name='more'></a>", r'', html)
+        # `img` in `a` tag
+        result = re.sub(r'<a.*?><img alt="(.*?)".*?src="(.+?)".+?/></a>', r'\n![\1](\2)\n', result )
+        result = re.sub(r'<a.*?><img.*?src="(.+?)".+?/></a>', r'\n![](\1)\n', result )
+        # `a` tag
+        result = re.sub(r'<a href="(.+?)">(.+?)</a>', r'[\2](\1)', result )
+        return result
+
+    def _handle_code(self, html):
+        ''' handle code
+        '''
+        def wrapper(html):
+            ''' wrapper
+            '''
+            result = re.sub(r'(__\w+__)', r'`\1`', html)
+            return result
+
+        def pre_handler(html):
+            ''' pre_handler
+            '''
+            CODE_PREFIX = '    '
+            result = list()
+            result.append('\n' + CODE_PREFIX + '::::')
+            for line in html.split('\n'):  
+                result.append(CODE_PREFIX + line)
+            result.append('')
+            return '\n'.join(result)
+        
+        result = unicode()
+        curr_pos = 0
+        while True:
+            pre_pos = html.find('<pre>', curr_pos)
+            if pre_pos >= 0:
+                result += wrapper(html[curr_pos:pre_pos])
+                curr_pos = pre_pos + 5 # 5 is length of <pre>
+                curr_pos = html.find('</pre>', curr_pos) + 6 # 6 is length of </pre>
+                result += pre_handler(html[pre_pos+5:curr_pos-6])
+            else:
+                # no `<pre>` & `</pre>`
+                result += wrapper(html[curr_pos:])
+                break
+        return result
+    
+                
+    def _handle_abbrv(self, html):
+        ''' handle abbreviations in html
+        '''
+        result = re.sub(r'&lt;', '<', html)
+        result = re.sub(r'&gt;', '>', result)
+        return result
+    
+    def transform(self):
+        ''' transform html post to markdown format
+        '''
+        # `br` tag
+        self._html = re.sub(r'<br />', '\n', self._html)
+
+        # `a` tag
+        self._html = self._handle_a_tag(self._html)
+        
+        # move `<span style="font-weight: bold;">` to bold
+        self._html = re.sub(r'<span style="font-weight: bold;">(.+?)</span>', r'**\1**', self._html)
+        self._html = re.sub(r'<b>(.+?)</b>', r'**\1**', self._html)
+
+        # move `<span style="font-style: italic;">` to italic
+        self._html = re.sub(r'<span style="font-style: italic;">(.+?)</span>', r'_\1_', self._html)
+        self._html = re.sub(r'<i>(.+?)</i>', r'_\1_', self._html)
+
+        # move `<ul>` to list
+        self._html = re.sub(r'<ul>(.+?)</ul>', r'- \1\n', self._html)
+        
+        # Blogger specific HTML code
+        self._html = re.sub(r'<div class="separator" style="clear: both; text-align: center;">\n(.+?)\n</div>',
+                            r'\1', self._html)
+        self._html = self._html.replace('<div class="separator" style="clear: both; text-align: center;"></div>', '')
+        self._html = re.sub(r'<div style="text-align: center;">(.+?)</div>', r'**\1**\n', self._html)
+
+        # code
+        self._html = self._handle_code(self._html)
+
+        # abbreviations
+        self._html = self._handle_abbrv(self._html)        
+
+        # remove multiple EoL
+        # self._html = re.sub(r'\n{3,}','\n', self._html)
+        return self._html
+     
 
 def simplify_datetime(dt):
     ''' 
@@ -85,10 +185,8 @@ def parse_entry(entry):
     result['title'] = u''.join(entry.select('a:title/text()').extract())
     
     content = u''.join(entry.select('a:content/text()').extract())
-    # TODO: added base url
-    h = html2text.HTML2Text()
-    h.parse_weird_links = True
-    result['content'] = h.handle(content)
+    post2md = Post2MD(content)
+    result['content'] = post2md.transform()
     
     result['link'] = u''.join(entry.select('a:link[@rel="alternate"]/@href').extract())
     
