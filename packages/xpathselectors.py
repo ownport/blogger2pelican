@@ -8,6 +8,7 @@
 
 import re
 from lxml import etree
+import six
 
 def flatten(x):
     """flatten(sequence) -> list
@@ -102,14 +103,14 @@ class XPathSelector(object):
         
     def extract(self):
         try:
-            return etree.tostring(self._root, method=self._tostring_method, encoding=unicode, with_tail=False)
+            return etree.tostring(self._root, method=self._tostring_method, encoding=six.u, with_tail=False)
         except (AttributeError, TypeError):
             if self._root is True:
                 return u'1'
             elif self._root is False:
                 return u'0'
             else:
-                return unicode(self._root)
+                return self._root
 
     def register_namespace(self, prefix, uri):
         if self.namespaces is None:
