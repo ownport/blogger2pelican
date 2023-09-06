@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import six
+import uuid
 
 try:
     from urllib.parse import urlparse
@@ -206,7 +207,7 @@ def parse_entry(entry):
     result['published'] = simplify_datetime(result['published'])
     result['updated'] = u''.join(entry.select('a:updated/text()').extract())
     result['updated'] = simplify_datetime(result['updated'])
-    result['title'] = u''.join(entry.select('a:title/text()').extract())
+    result['title'] = u''.join(entry.select('a:title/text()').extract()) or 'untitled-' + str(uuid.uuid4())[:8]
 
     content = u''.join(entry.select('a:content/text()').extract())
     post2md = Post2MD(content)
