@@ -4,9 +4,9 @@ Converter [blogger](http://www.blogger.com) posts for import to [pelican](http:/
 
 ## How to install
 
-To use blogger2pelican.py script you need to have installed `lxml`
+Before using blogger2pelican.py script, install the dependencies:
 ```
-$ pip install lxml
+$ pip install -r requirements.txt
 ```
 
 ## How to use
