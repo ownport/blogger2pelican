@@ -168,7 +168,7 @@ def save_post(directory, post):
         os.makedirs(os.path.dirname(post_path))
 
     if os.path.exists(post_path):
-        raise IOError("File '{}' already exists".format(post_path))
+        post_path = post_path[:-3] + '-duplicated-' + str(uuid.uuid4())[:8] + '.md'
 
     with open(post_path, 'wb') as post_file:
         data = make_post(post)
