@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import six
+import uuid
 
 try:
     from urllib.parse import urlparse
@@ -167,7 +168,7 @@ def save_post(directory, post):
         os.makedirs(os.path.dirname(post_path))
 
     if os.path.exists(post_path):
-        raise IOError("File '{}' already exists".format(post_path))
+        post_path = post_path[:-3] + '-duplicated-' + str(uuid.uuid4())[:8] + '.md'
 
     with open(post_path, 'wb') as post_file:
         data = make_post(post)
@@ -206,7 +207,7 @@ def parse_entry(entry):
     result['published'] = simplify_datetime(result['published'])
     result['updated'] = u''.join(entry.select('a:updated/text()').extract())
     result['updated'] = simplify_datetime(result['updated'])
-    result['title'] = u''.join(entry.select('a:title/text()').extract())
+    result['title'] = u''.join(entry.select('a:title/text()').extract()) or 'untitled-' + str(uuid.uuid4())[:8]
 
     content = u''.join(entry.select('a:content/text()').extract())
     post2md = Post2MD(content)
